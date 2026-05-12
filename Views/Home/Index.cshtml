@@ -1,515 +1,287 @@
-<!-- File: docs/index.html -->
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ticket Radar</title>
-    <meta name="description" content="نسخة static من Ticket Radar تعمل على GitHub Pages" />
-    <style>
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-            background: #f5f7fb;
-            color: #212529;
-        }
+@* File: Views/Home/Index.cshtml *@
+@{
+    ViewData["Title"] = "Ticket Radar";
 
-        .container {
-            width: min(100% - 24px, 900px);
-            margin: 40px auto;
-        }
+    var selectedTeam = ViewBag.SelectedTeam as string ?? "";
+    var lastStatus = ViewBag.LastStatus as string ?? "اختر النادي واضغط تشغيل الرادار";
+    var lastCheckTime = ViewBag.LastCheckTime as string ?? "-";
+    var bookingUrl = ViewBag.BookingUrl as string ?? "https://www.tazkarti.com/#/matches";
+}
 
-        .hero-card,
-        .control-card,
-        .status-card {
-            border: none;
-            border-radius: 22px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            background: #ffffff;
-        }
+<style>
+    .ticket-page {
+        max-width: 900px;
+        margin: 40px auto;
+    }
 
-        .hero-card {
-            background: linear-gradient(135deg, #0d6efd, #198754);
-            color: #fff;
-            padding: 28px;
-            text-align: center;
-            margin-bottom: 16px;
-        }
+    .hero-card,
+    .control-card,
+    .status-card {
+        border: none;
+        border-radius: 22px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+    }
 
-        .hero-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
+    .hero-card {
+        background: linear-gradient(135deg, #0d6efd, #198754);
+        color: #fff;
+        padding: 28px;
+    }
 
-        .hero-subtitle {
-            font-size: 1.05rem;
-            margin-bottom: 0;
-            opacity: 0.95;
-        }
+    .hero-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
 
-        .card {
-            padding: 24px;
-            margin-bottom: 16px;
-        }
+    .hero-subtitle {
+        font-size: 1.05rem;
+        margin-bottom: 0;
+        opacity: 0.95;
+    }
 
-        .card-title-custom {
-            font-size: 1.35rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+    .card-title-custom {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
 
-        .team-select {
-            width: 100%;
-            height: 52px;
-            border-radius: 14px;
-            font-size: 1rem;
-            border: 1px solid #ced4da;
-            padding: 0 14px;
-            background: #fff;
-        }
+    .team-select {
+        height: 52px;
+        border-radius: 14px;
+        font-size: 1rem;
+    }
 
-        .action-btn,
-        .sound-btn,
-        .booking-btn {
-            min-height: 48px;
-            border-radius: 14px;
-            font-weight: 700;
-            border: none;
-            cursor: pointer;
-            padding: 12px 20px;
-            font-size: 1rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
+    .action-btn,
+    .sound-btn,
+    .booking-btn {
+        min-height: 48px;
+        border-radius: 14px;
+        font-weight: 700;
+    }
 
-        .btn-success {
-            background: #198754;
-            color: #fff;
-        }
+    .status-box {
+        font-size: 1.25rem;
+        line-height: 2;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        padding: 20px;
+        min-height: 110px;
+        word-break: break-word;
+    }
 
-        .btn-outline-danger {
-            background: #fff;
-            color: #dc3545;
-            border: 1px solid #dc3545;
-        }
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+    }
 
-        .btn-primary {
-            background: #0d6efd;
-            color: #fff;
-        }
+    .meta-item {
+        background: #f8f9fa;
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid #eef1f4;
+    }
 
-        .btn-warning {
-            background: #ffc107;
-            color: #212529;
-        }
+    .meta-label {
+        display: block;
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
 
-        .btn-secondary {
-            background: #6c757d;
-            color: #fff;
-        }
+    .meta-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #212529;
+    }
 
-        .status-box {
-            font-size: 1.25rem;
-            line-height: 2;
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 18px;
-            padding: 20px;
-            min-height: 110px;
-            word-break: break-word;
-            text-align: center;
-        }
+    .controls-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 20px;
+    }
 
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 14px;
-            margin-top: 20px;
-        }
+    .status-live {
+        color: #198754;
+        font-weight: 700;
+    }
 
-        .meta-item {
-            background: #f8f9fa;
-            border-radius: 16px;
-            padding: 14px 16px;
-            border: 1px solid #eef1f4;
-        }
+    .status-idle {
+        color: #dc3545;
+        font-weight: 700;
+    }
+</style>
 
-        .meta-label {
-            display: block;
-            font-size: 0.95rem;
-            color: #6c757d;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
+<div class="container ticket-page">
+    <div class="hero-card text-center mb-4">
+        <div class="hero-title">🎫 Ticket Radar</div>
+        <p class="hero-subtitle">مراقبة تذاكر تذكرتي بشكل مباشر وتنبيه عند توفر الحجز</p>
+    </div>
 
-        .meta-value {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #212529;
-        }
+    <div class="card control-card p-4 mb-4 text-center">
+        <div class="card-title-custom">اختيار النادي</div>
 
-        .controls-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .status-live {
-            color: #198754;
-            font-weight: 700;
-        }
-
-        .status-idle {
-            color: #dc3545;
-            font-weight: 700;
-        }
-
-        .mb-3 {
-            margin-bottom: 1rem;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .note {
-            margin-top: 14px;
-            font-size: 0.95rem;
-            color: #6c757d;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 1.8rem;
-            }
-
-            .status-box {
-                font-size: 1.05rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="hero-card">
-            <div class="hero-title">🎫 Ticket Radar</div>
-            <p class="hero-subtitle">مراقبة تذاكر تذكرتي بشكل مباشر وتنبيه عند توفر الحجز</p>
-        </div>
-
-        <div class="card control-card text-center">
-            <div class="card-title-custom">اختيار النادي</div>
+        <form method="post" asp-controller="Home" asp-action="StartRadar">
+            @Html.AntiForgeryToken()
 
             <div class="mb-3">
-                <select id="teamName" class="team-select text-center">
+                <select name="teamName" id="teamName" class="form-select text-center team-select">
                     <option value="">-- اختر النادي --</option>
-                    <option value="النادي الأهلى">النادي الأهلى</option>
-                    <option value="نادى الزمالك">نادى الزمالك</option>
+                    <option value="النادي الأهلى" selected="@(selectedTeam == "النادي الأهلى")">النادي الأهلى</option>
+                    <option value="نادى الزمالك" selected="@(selectedTeam == "نادى الزمالك")">نادى الزمالك</option>
                 </select>
             </div>
 
             <div class="controls-row">
-                <button type="button" id="startButton" class="action-btn btn-success">
+                <button type="submit" class="btn btn-success px-4 action-btn">
                     تشغيل الرادار
                 </button>
 
-                <button type="button" id="stopButton" class="action-btn btn-outline-danger">
+                <button type="submit"
+                        formaction="@Url.Action("StopRadar", "Home")"
+                        formmethod="post"
+                        class="btn btn-outline-danger px-4 action-btn">
                     إيقاف الرادار
                 </button>
             </div>
+        </form>
+    </div>
 
-            <div class="note">
-                هذه نسخة static تعمل على GitHub Pages وقد يتعذر جلب البيانات مباشرة إذا كان الموقع يمنع CORS.
-            </div>
+    <div class="card status-card p-4 text-center">
+        <div class="card-title-custom">الحالة الحالية</div>
+
+        <div id="statusBox" class="status-box">
+            @Html.Raw(lastStatus)
         </div>
 
-        <div class="card status-card text-center">
-            <div class="card-title-custom">الحالة الحالية</div>
+        <div class="controls-row">
+            <a id="bookingButton" href="@bookingUrl" target="_blank" class="btn btn-primary px-4 booking-btn">
+                فتح صفحة المباريات
+            </a>
 
-            <div id="statusBox" class="status-box">
-                اختر النادي واضغط تشغيل الرادار
+            <button type="button" id="soundToggleButton" class="btn btn-warning px-4 sound-btn">
+                🔊 الصوت مفعل
+            </button>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">النادي المختار</span>
+                <span id="selectedTeamText" class="meta-value">
+                    @(string.IsNullOrWhiteSpace(selectedTeam) ? "-" : selectedTeam)
+                </span>
             </div>
 
-            <div class="controls-row">
-                <a id="bookingButton" href="https://www.tazkarti.com/#/matches" target="_blank" rel="noreferrer" class="booking-btn btn-primary">
-                    فتح صفحة المباريات
-                </a>
-
-                <button type="button" id="soundToggleButton" class="sound-btn btn-warning">
-                    🔊 الصوت مفعل
-                </button>
+            <div class="meta-item">
+                <span class="meta-label">آخر فحص</span>
+                <span id="lastCheckTime" class="meta-value">@lastCheckTime</span>
             </div>
 
-            <div class="meta-grid">
-                <div class="meta-item">
-                    <span class="meta-label">النادي المختار</span>
-                    <span id="selectedTeamText" class="meta-value">-</span>
-                </div>
-
-                <div class="meta-item">
-                    <span class="meta-label">آخر فحص</span>
-                    <span id="lastCheckTime" class="meta-value">-</span>
-                </div>
-
-                <div class="meta-item">
-                    <span class="meta-label">حالة التنبيه</span>
-                    <span id="soundStatusText" class="meta-value status-live">مفعل</span>
-                </div>
+            <div class="meta-item">
+                <span class="meta-label">حالة التنبيه</span>
+                <span id="soundStatusText" class="meta-value status-live">مفعل</span>
             </div>
         </div>
     </div>
+</div>
 
-    <audio id="alarmSound" preload="auto">
-        <source src="./sounds/alarm.mp3" type="audio/mpeg" />
-    </audio>
+<audio id="alarmSound" src="/sounds/alarm.mp3" preload="auto"></audio>
 
-    <script>
-        const MATCHES_URL = "https://www.tazkarti.com/data/matches-list-json.json";
-        const BOOKING_URL = "https://www.tazkarti.com/#/matches";
-        const DEFAULT_STATUS = "اختر النادي واضغط تشغيل الرادار";
-        const POLL_INTERVAL_MS = 5000;
+<script>
+    let lastPlayedStatus = "";
+    let isSoundEnabled = true;
 
-        let selectedTeam = localStorage.getItem("ticketRadar.selectedTeam") || "";
-        let lastPlayedStatus = "";
-        let isSoundEnabled = localStorage.getItem("ticketRadar.soundEnabled") !== "false";
-        let radarTimerId = null;
+    function updateSoundButton() {
+        const soundToggleButton = document.getElementById("soundToggleButton");
+        const soundStatusText = document.getElementById("soundStatusText");
 
-        function updateSoundButton() {
-            const soundToggleButton = document.getElementById("soundToggleButton");
-            const soundStatusText = document.getElementById("soundStatusText");
-
-            if (isSoundEnabled) {
-                soundToggleButton.className = "sound-btn btn-warning";
-                soundToggleButton.textContent = "🔊 الصوت مفعل";
-                soundStatusText.textContent = "مفعل";
-                soundStatusText.className = "meta-value status-live";
-                return;
-            }
-
-            soundToggleButton.className = "sound-btn btn-secondary";
-            soundToggleButton.textContent = "🔇 الصوت متوقف";
-            soundStatusText.textContent = "متوقف";
-            soundStatusText.className = "meta-value status-idle";
+        if (isSoundEnabled) {
+            soundToggleButton.className = "btn btn-warning px-4 sound-btn";
+            soundToggleButton.textContent = "🔊 الصوت مفعل";
+            soundStatusText.textContent = "مفعل";
+            soundStatusText.className = "meta-value status-live";
+            return;
         }
 
-        function updateMeta() {
-            document.getElementById("selectedTeamText").textContent = selectedTeam || "-";
-            document.getElementById("lastCheckTime").textContent = new Date().toLocaleString("ar-EG");
-        }
+        soundToggleButton.className = "btn btn-secondary px-4 sound-btn";
+        soundToggleButton.textContent = "🔇 الصوت متوقف";
+        soundStatusText.textContent = "متوقف";
+        soundStatusText.className = "meta-value status-idle";
+    }
 
-        function renderStatus(status, bookingUrl = BOOKING_URL) {
-            document.getElementById("statusBox").innerHTML = status || "لا توجد بيانات";
-            document.getElementById("bookingButton").href = bookingUrl || BOOKING_URL;
-            updateMeta();
-        }
+    function renderStatus(status, bookingUrl) {
+        const statusBox = document.getElementById("statusBox");
+        const bookingButton = document.getElementById("bookingButton");
+        const safeStatus = status || "لا توجد بيانات";
+        const safeBookingUrl = bookingUrl || "https://www.tazkarti.com/#/matches";
 
-        function normalizeArabic(value) {
-            return String(value || "")
-                .trim()
-                .replace(/[أإآ]/g, "ا")
-                .replace(/ى/g, "ي")
-                .replace(/ة/g, "ه")
-                .replace(/ـ/g, "")
-                .toLowerCase();
-        }
+        bookingButton.href = safeBookingUrl;
+        statusBox.innerHTML = safeStatus;
+    }
 
-        function containsText(source, team) {
-            return normalizeArabic(source).includes(normalizeArabic(team));
-        }
-
-        function getSafeValue(preferred, fallback) {
-            if (preferred && String(preferred).trim()) {
-                return preferred;
-            }
-
-            if (fallback && String(fallback).trim()) {
-                return fallback;
-            }
-
-            return "غير محدد";
-        }
-
-        function formatKickoffTime(value) {
-            if (!value) {
-                return "الوقت غير محدد";
-            }
-
-            const date = new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                return "الوقت غير محدد";
-            }
-
-            return date.toLocaleString("ar-EG", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit"
-            });
-        }
-
-        async function fetchMatches() {
-            const url = `${MATCHES_URL}?_=${Date.now()}`;
-            const response = await fetch(url, {
-                method: "GET",
-                cache: "no-store"
+    async function refreshStatus() {
+        try {
+            const response = await fetch('@Url.Action("Status", "Home")', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                return;
             }
 
-            return response.json();
-        }
+            const data = await response.json();
 
-        function findAvailableMatches(matches, team) {
-            return (Array.isArray(matches) ? matches : [])
-                .filter((x) => {
-                    return x.matchStatus === 1 &&
-                        x.matchHasBookedTickets === true &&
-                        (
-                            containsText(x.teamNameAr1, team) ||
-                            containsText(x.teamNameAr2, team) ||
-                            containsText(x.teamName1, team) ||
-                            containsText(x.teamName2, team)
-                        );
-                })
-                .sort((a, b) => {
-                    const aTime = a.kickOffTime ? new Date(a.kickOffTime).getTime() : Number.MAX_SAFE_INTEGER;
-                    const bTime = b.kickOffTime ? new Date(b.kickOffTime).getTime() : Number.MAX_SAFE_INTEGER;
-                    return aTime - bTime;
+            const selectedTeamText = document.getElementById("selectedTeamText");
+            const lastCheckTime = document.getElementById("lastCheckTime");
+
+            const status = data.lastStatus || "لا توجد بيانات";
+            const team = data.selectedTeam || "-";
+            const checkTime = data.lastCheckTime || "-";
+            const bookingUrl = data.bookingUrl || "https://www.tazkarti.com/#/matches";
+
+            renderStatus(status, bookingUrl);
+            selectedTeamText.textContent = team;
+            lastCheckTime.textContent = checkTime;
+
+            const hasTickets = status.includes("🔥");
+
+            if (hasTickets && isSoundEnabled && status !== lastPlayedStatus) {
+                const audio = document.getElementById("alarmSound");
+                audio.play().catch(function () {
+                    console.log("المتصفح منع تشغيل الصوت قبل التفاعل");
                 });
-        }
 
-        function buildStatusHtml(matches) {
-            if (!matches.length) {
-                return `لا توجد تذاكر متاحة حالياً لـ: ${escapeHtml(selectedTeam)}`;
+                lastPlayedStatus = status;
             }
 
-            return matches.map((match) => {
-                const team1 = getSafeValue(match.teamNameAr1, match.teamName1);
-                const team2 = getSafeValue(match.teamNameAr2, match.teamName2);
-                const stadium = getSafeValue(match.stadiumNameAr, "غير محدد");
-                const kickoff = formatKickoffTime(match.kickOffTime);
-
-                return `🔥 ${escapeHtml(team1)} ضد ${escapeHtml(team2)} - ${escapeHtml(stadium)} - ${escapeHtml(kickoff)}`;
-            }).join("<br>");
-        }
-
-        function escapeHtml(value) {
-            return String(value)
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#39;");
-        }
-
-        async function refreshStatus() {
-            if (!selectedTeam) {
-                renderStatus(DEFAULT_STATUS);
-                return;
+            if (!hasTickets) {
+                lastPlayedStatus = "";
             }
-
-            try {
-                const matches = await fetchMatches();
-                const availableMatches = findAvailableMatches(matches, selectedTeam);
-                const statusHtml = buildStatusHtml(availableMatches);
-
-                renderStatus(statusHtml, BOOKING_URL);
-
-                const hasTickets = availableMatches.length > 0;
-                if (hasTickets && isSoundEnabled && statusHtml !== lastPlayedStatus) {
-                    const audio = document.getElementById("alarmSound");
-                    audio.play().catch(() => {
-                        console.log("المتصفح منع تشغيل الصوت قبل التفاعل");
-                    });
-                    lastPlayedStatus = statusHtml;
-                }
-
-                if (!hasTickets) {
-                    lastPlayedStatus = "";
-                }
-            } catch (error) {
-                console.error("فشل تحديث الحالة", error);
-                renderStatus(
-                    "تعذر قراءة بيانات تذكرتي مباشرة من المتصفح. قد يكون السبب CORS أو تغيّر الـ API. استخدم زر فتح صفحة المباريات.",
-                    BOOKING_URL
-                );
-            }
+        } catch (error) {
+            console.log("فشل تحديث الحالة", error);
         }
+    }
 
-        function startRadar() {
-            const teamSelect = document.getElementById("teamName");
-            const team = teamSelect.value.trim();
+    window.addEventListener("load", function () {
+        const soundToggleButton = document.getElementById("soundToggleButton");
 
-            selectedTeam = team;
-            localStorage.setItem("ticketRadar.selectedTeam", selectedTeam);
-            document.getElementById("selectedTeamText").textContent = selectedTeam || "-";
-
-            if (!selectedTeam) {
-                renderStatus(DEFAULT_STATUS);
-                stopPolling();
-                return;
-            }
-
-            renderStatus(`الرادار يعمل الآن على: ${escapeHtml(selectedTeam)}`, BOOKING_URL);
-            startPolling();
-            refreshStatus();
-        }
-
-        function stopRadar() {
-            selectedTeam = "";
-            localStorage.removeItem("ticketRadar.selectedTeam");
-            lastPlayedStatus = "";
-            document.getElementById("teamName").value = "";
-            renderStatus("تم إيقاف الرادار", BOOKING_URL);
-            document.getElementById("selectedTeamText").textContent = "-";
-            stopPolling();
-        }
-
-        function startPolling() {
-            stopPolling();
-            radarTimerId = window.setInterval(refreshStatus, POLL_INTERVAL_MS);
-        }
-
-        function stopPolling() {
-            if (radarTimerId !== null) {
-                window.clearInterval(radarTimerId);
-                radarTimerId = null;
-            }
-        }
-
-        window.addEventListener("load", function () {
-            document.getElementById("teamName").value = selectedTeam;
-            document.getElementById("selectedTeamText").textContent = selectedTeam || "-";
-
-            document.getElementById("startButton").addEventListener("click", startRadar);
-            document.getElementById("stopButton").addEventListener("click", stopRadar);
-
-            document.getElementById("soundToggleButton").addEventListener("click", function () {
-                isSoundEnabled = !isSoundEnabled;
-                localStorage.setItem("ticketRadar.soundEnabled", String(isSoundEnabled));
-                updateSoundButton();
-            });
-
+        soundToggleButton.addEventListener("click", function () {
+            isSoundEnabled = !isSoundEnabled;
             updateSoundButton();
-
-            if (selectedTeam) {
-                renderStatus(`الرادار يعمل الآن على: ${escapeHtml(selectedTeam)}`, BOOKING_URL);
-                startPolling();
-                refreshStatus();
-                return;
-            }
-
-            renderStatus(DEFAULT_STATUS, BOOKING_URL);
         });
-    </script>
-</body>
-</html>
+
+        updateSoundButton();
+        renderStatus(`@Html.Raw(lastStatus)`, "@bookingUrl");
+        refreshStatus();
+        setInterval(refreshStatus, 2000);
+    });
+</script>
