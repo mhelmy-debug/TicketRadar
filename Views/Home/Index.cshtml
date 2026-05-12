@@ -1,0 +1,287 @@
+﻿@* File: Views/Home/Index.cshtml *@
+@{
+    ViewData["Title"] = "Ticket Radar";
+
+    var selectedTeam = ViewBag.SelectedTeam as string ?? "";
+    var lastStatus = ViewBag.LastStatus as string ?? "اختر النادي واضغط تشغيل الرادار";
+    var lastCheckTime = ViewBag.LastCheckTime as string ?? "-";
+    var bookingUrl = ViewBag.BookingUrl as string ?? "https://www.tazkarti.com/#/matches";
+}
+
+<style>
+    .ticket-page {
+        max-width: 900px;
+        margin: 40px auto;
+    }
+
+    .hero-card,
+    .control-card,
+    .status-card {
+        border: none;
+        border-radius: 22px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+    }
+
+    .hero-card {
+        background: linear-gradient(135deg, #0d6efd, #198754);
+        color: #fff;
+        padding: 28px;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.05rem;
+        margin-bottom: 0;
+        opacity: 0.95;
+    }
+
+    .card-title-custom {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .team-select {
+        height: 52px;
+        border-radius: 14px;
+        font-size: 1rem;
+    }
+
+    .action-btn,
+    .sound-btn,
+    .booking-btn {
+        min-height: 48px;
+        border-radius: 14px;
+        font-weight: 700;
+    }
+
+    .status-box {
+        font-size: 1.25rem;
+        line-height: 2;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 18px;
+        padding: 20px;
+        min-height: 110px;
+        word-break: break-word;
+    }
+
+    .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-top: 20px;
+    }
+
+    .meta-item {
+        background: #f8f9fa;
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid #eef1f4;
+    }
+
+    .meta-label {
+        display: block;
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .meta-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .controls-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .status-live {
+        color: #198754;
+        font-weight: 700;
+    }
+
+    .status-idle {
+        color: #dc3545;
+        font-weight: 700;
+    }
+</style>
+
+<div class="container ticket-page">
+    <div class="hero-card text-center mb-4">
+        <div class="hero-title">🎫 Ticket Radar</div>
+        <p class="hero-subtitle">مراقبة تذاكر تذكرتي بشكل مباشر وتنبيه عند توفر الحجز</p>
+    </div>
+
+    <div class="card control-card p-4 mb-4 text-center">
+        <div class="card-title-custom">اختيار النادي</div>
+
+        <form method="post" asp-controller="Home" asp-action="StartRadar">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <select name="teamName" id="teamName" class="form-select text-center team-select">
+                    <option value="">-- اختر النادي --</option>
+                    <option value="النادي الأهلى" selected="@(selectedTeam == "النادي الأهلى")">النادي الأهلى</option>
+                    <option value="نادى الزمالك" selected="@(selectedTeam == "نادى الزمالك")">نادى الزمالك</option>
+                </select>
+            </div>
+
+            <div class="controls-row">
+                <button type="submit" class="btn btn-success px-4 action-btn">
+                    تشغيل الرادار
+                </button>
+
+                <button type="submit"
+                        formaction="@Url.Action("StopRadar", "Home")"
+                        formmethod="post"
+                        class="btn btn-outline-danger px-4 action-btn">
+                    إيقاف الرادار
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card status-card p-4 text-center">
+        <div class="card-title-custom">الحالة الحالية</div>
+
+        <div id="statusBox" class="status-box">
+            @Html.Raw(lastStatus)
+        </div>
+
+        <div class="controls-row">
+            <a id="bookingButton" href="@bookingUrl" target="_blank" class="btn btn-primary px-4 booking-btn">
+                فتح صفحة المباريات
+            </a>
+
+            <button type="button" id="soundToggleButton" class="btn btn-warning px-4 sound-btn">
+                🔊 الصوت مفعل
+            </button>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">النادي المختار</span>
+                <span id="selectedTeamText" class="meta-value">
+                    @(string.IsNullOrWhiteSpace(selectedTeam) ? "-" : selectedTeam)
+                </span>
+            </div>
+
+            <div class="meta-item">
+                <span class="meta-label">آخر فحص</span>
+                <span id="lastCheckTime" class="meta-value">@lastCheckTime</span>
+            </div>
+
+            <div class="meta-item">
+                <span class="meta-label">حالة التنبيه</span>
+                <span id="soundStatusText" class="meta-value status-live">مفعل</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<audio id="alarmSound" src="/sounds/alarm.mp3" preload="auto"></audio>
+
+<script>
+    let lastPlayedStatus = "";
+    let isSoundEnabled = true;
+
+    function updateSoundButton() {
+        const soundToggleButton = document.getElementById("soundToggleButton");
+        const soundStatusText = document.getElementById("soundStatusText");
+
+        if (isSoundEnabled) {
+            soundToggleButton.className = "btn btn-warning px-4 sound-btn";
+            soundToggleButton.textContent = "🔊 الصوت مفعل";
+            soundStatusText.textContent = "مفعل";
+            soundStatusText.className = "meta-value status-live";
+            return;
+        }
+
+        soundToggleButton.className = "btn btn-secondary px-4 sound-btn";
+        soundToggleButton.textContent = "🔇 الصوت متوقف";
+        soundStatusText.textContent = "متوقف";
+        soundStatusText.className = "meta-value status-idle";
+    }
+
+    function renderStatus(status, bookingUrl) {
+        const statusBox = document.getElementById("statusBox");
+        const bookingButton = document.getElementById("bookingButton");
+        const safeStatus = status || "لا توجد بيانات";
+        const safeBookingUrl = bookingUrl || "https://www.tazkarti.com/#/matches";
+
+        bookingButton.href = safeBookingUrl;
+        statusBox.innerHTML = safeStatus;
+    }
+
+    async function refreshStatus() {
+        try {
+            const response = await fetch('@Url.Action("Status", "Home")', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            const selectedTeamText = document.getElementById("selectedTeamText");
+            const lastCheckTime = document.getElementById("lastCheckTime");
+
+            const status = data.lastStatus || "لا توجد بيانات";
+            const team = data.selectedTeam || "-";
+            const checkTime = data.lastCheckTime || "-";
+            const bookingUrl = data.bookingUrl || "https://www.tazkarti.com/#/matches";
+
+            renderStatus(status, bookingUrl);
+            selectedTeamText.textContent = team;
+            lastCheckTime.textContent = checkTime;
+
+            const hasTickets = status.includes("🔥");
+
+            if (hasTickets && isSoundEnabled && status !== lastPlayedStatus) {
+                const audio = document.getElementById("alarmSound");
+                audio.play().catch(function () {
+                    console.log("المتصفح منع تشغيل الصوت قبل التفاعل");
+                });
+
+                lastPlayedStatus = status;
+            }
+
+            if (!hasTickets) {
+                lastPlayedStatus = "";
+            }
+        } catch (error) {
+            console.log("فشل تحديث الحالة", error);
+        }
+    }
+
+    window.addEventListener("load", function () {
+        const soundToggleButton = document.getElementById("soundToggleButton");
+
+        soundToggleButton.addEventListener("click", function () {
+            isSoundEnabled = !isSoundEnabled;
+            updateSoundButton();
+        });
+
+        updateSoundButton();
+        renderStatus(`@Html.Raw(lastStatus)`, "@bookingUrl");
+        refreshStatus();
+        setInterval(refreshStatus, 2000);
+    });
+</script>
